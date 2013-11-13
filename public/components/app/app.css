@@ -10,6 +10,7 @@ html, body {
 #surface {
     display: -webkit-box;
     -webkit-box-orient: horizontal;
+    height:100%;
 }
 
 
