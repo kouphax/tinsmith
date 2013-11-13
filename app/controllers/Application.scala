@@ -22,7 +22,8 @@ object Application extends Controller {
 
       Try(ScalaCodeSheet.computeResults(input)).map { results =>
         channel.push(Json.obj(
-          "userRepr" -> results.userRepr,
+          // TODO Remove the warning message when the code sheet doesn't return it
+          "userRepr" -> results.userRepr.replaceAllLiterally("This catches all Throwables. If this is really intended, use `case ex : Throwable` to clear this warning.", ""),
           "output" -> results.output
         ).toString)
       } recover { case failure: InvocationTargetException =>
