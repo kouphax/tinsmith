@@ -1,0 +1,122 @@
+<html>
+    <head>
+        <title>Test</title>
+        <link rel="stylesheet" href='@routes.Assets.at("bower_components/codemirror/lib/codemirror.css")'>
+        <link rel="stylesheet" href='@routes.Assets.at("bower_components/codemirror/theme/solarized.css")'>
+        <link rel="stylesheet" href='@routes.Assets.at("bower_components/codemirror/addon/hint/show-hint.css")'>
+        <style>
+            html, body {
+                border: 0;
+                margin: 0;
+                padding: 0;
+                width:100%;
+            }
+
+            #surface {
+                display: -webkit-box;
+                -webkit-box-orient: horizontal;
+            }
+
+
+            #code, #outputs {
+                -webkit-box-flex: 1;
+                width:50%;
+                height:100%;
+                overflow-x: scroll;
+            }
+
+            #output, #console {
+                height:50%;
+                background: white;
+            }
+
+            .CodeMirror {
+                height:100%;
+                font-size:1.2rem;
+                line-height: 1.80rem;
+            }
+
+            #outputs {
+                background-color: #888;
+            }
+
+            .cm-s-solarized .CodeMirror-gutters { box-shadow: none;}
+        </style>
+
+    </head>
+    <body>
+        <div id="surface">
+            <div id="code"></div>
+            <div id="outputs">
+                <div id="output">
+                </div>
+                <div id="console">
+
+                </div>
+            </div>
+        </div>
+
+        <script src='@routes.Assets.at("bower_components/codemirror/lib/codemirror.js")'></script>
+        <script src='@routes.Assets.at("bower_components/codemirror/addon/runmode/runmode.js")'></script>
+        <script src='@routes.Assets.at("bower_components/codemirror/mode/clike/clike.js")'></script>
+        <script src='@routes.Assets.at("bower_components/codemirror/addon/edit/closebrackets.js")'></script>
+        <script src='@routes.Assets.at("bower_components/codemirror/addon/hint/show-hint.js")'></script>
+        <script>
+
+            function debounce(fn, delay) {
+                var timer = null;
+                return function () {
+                    var context = this, args = arguments;
+                    clearTimeout(timer);
+                    timer = setTimeout(function () {
+                        fn.apply(context, args);
+                    }, delay);
+                };
+            }
+
+            var editor = CodeMirror(document.getElementById("code"), {
+                mode:  "text/x-scala",
+                theme: "solarized light",
+                smartIndent: false,
+                tabSize: 2,
+                lineNumbers: true
+            });
+
+            var display = CodeMirror(document.getElementById("output"), {
+                mode:  "text/x-scala",
+                theme: "solarized light",
+                readOnly: true,
+                tabSize: 2,
+                lineNumbers: true
+            })
+
+            var console = CodeMirror(document.getElementById("console"), {
+                mode:  "text/x-scala",
+                theme: "solarized light",
+                readOnly: true,
+                tabSize: 2,
+                lineNumbers: true,
+                lineNumberFormatter: function(){
+                    return ">"
+                }
+            })
+
+            editor.on("change", debounce(function(me, obj){
+                ws.send(me.getValue())
+            }, 1000))
+
+            var ws = new WebSocket('ws://' + window.location.host + '/stream')
+            ws.onmessage = function( message ) {
+                var data = JSON.parse(message.data)
+                display.setValue(data.userRepr)
+                console.setValue(data.output)
+            };
+
+            ws.onerror = function(){
+                display.setValue("error")
+                editor.log(arguments)
+            }
+
+        </script>
+    </body>
+</html>
