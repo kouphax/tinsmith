@@ -10,6 +10,7 @@
                 margin: 0;
                 padding: 0;
                 width:100%;
+                background-color: black;
             }
 
             #surface {
@@ -27,7 +28,6 @@
 
             #output, #console {
                 height:50%;
-                background: white;
             }
 
             .CodeMirror {
@@ -37,7 +37,9 @@
             }
 
             #outputs {
-                background-color: #888;
+                transition: opacity .1s ease-out;
+                -moz-transition: opacity .1s ease-out;
+                -webkit-transition: opacity .1s ease-out;
             }
 
             .cm-s-solarized .CodeMirror-gutters { box-shadow: none;}
@@ -74,6 +76,7 @@
                 };
             }
 
+            var outputPane = document.getElementById("outputs");
             var editor = CodeMirror(document.getElementById("code"), {
                 mode:  "text/x-scala",
                 theme: "solarized light",
@@ -102,17 +105,21 @@
             })
 
             editor.on("change", debounce(function(me, obj){
+                outputs.style.opacity = "0.75"
                 ws.send(me.getValue())
-            }, 1000))
+            }, 1500))
 
             var ws = new WebSocket('ws://' + window.location.host + '/stream')
             ws.onmessage = function( message ) {
+
+                outputs.style.opacity = "1"
                 var data = JSON.parse(message.data)
                 display.setValue(data.userRepr)
                 console.setValue(data.output)
             };
 
             ws.onerror = function(){
+                outputs.style.opacity = "1"
                 display.setValue("error")
                 editor.log(arguments)
             }
