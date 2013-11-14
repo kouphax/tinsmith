@@ -20,13 +20,15 @@ object Application extends Controller {
     val (out, channel) = Concurrent.broadcast[String]
     val in = Iteratee.foreach[String] { input =>
 
+      val startTime = System.nanoTime()
       Try(ScalaCodeSheet.computeResults(input)).map { results =>
         channel.push(Json.obj(
           // TODO Remove the warning message when the code sheet doesn't return it
           "userRepr" -> results.userRepr.replaceAllLiterally("This catches all Throwables. If this is really intended, use `case ex : Throwable` to clear this warning.", ""),
-          "output" -> results.output
+          "output" -> (results.output + "\n" + timeToComplete(startTime))
         ).toString)
       } recover { case failure: InvocationTargetException =>
+
         val target = failure.getTargetException
         val writer = new StringWriter
 
@@ -35,13 +37,14 @@ object Application extends Controller {
 
         channel.push(Json.obj(
           "userRepr" -> "",
-          "output" -> writer.toString
+          "output" -> (writer.toString + "\n" + timeToComplete(startTime))
         ).toString)
       }
-
 
     }
 
     (in, out)
   }
+
+  private def timeToComplete(startTime: Long) = "Elapsed time: " + (System.nanoTime() - startTime)/1000000000.0 + "s"
 }
