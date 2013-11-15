@@ -11,6 +11,7 @@ you'd use this for - tinkering.
 - Returns any thrown exceptions or console output
 - Saves current code into the URL so it's bookmarkable and shareable
 - Random assortment of JARs on the classpath for use (__needs formalised a bit__)
+  - Joda Time, Scala Utils, Play! 2 Stuff, Guava
 
 ## Running Locally
 
