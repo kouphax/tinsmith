@@ -23,21 +23,14 @@ object Application extends Controller {
       val startTime = System.nanoTime()
       Try(ScalaCodeSheet.computeResults(input)).map { results =>
         channel.push(Json.obj(
-          // TODO Remove the warning message when the code sheet doesn't return it
-          "userRepr" -> results.userRepr.replaceAllLiterally("This catches all Throwables. If this is really intended, use `case ex : Throwable` to clear this warning.", ""),
+
+          "userRepr" -> removeCodeSheetWarnings(results.userRepr),
           "output" -> (results.output + "\n" + timeToComplete(startTime))
         ).toString)
       } recover { case failure: InvocationTargetException =>
-
-        val target = failure.getTargetException
-        val writer = new StringWriter
-
-        writer.write(target.getMessage + "\n")
-        target.printStackTrace(new PrintWriter(writer, true))
-
         channel.push(Json.obj(
           "userRepr" -> "",
-          "output" -> (writer.toString + "\n" + timeToComplete(startTime))
+          "output" -> (stringifyException(failure.getTargetException) + "\n" + timeToComplete(startTime))
         ).toString)
       }
 
@@ -46,5 +39,20 @@ object Application extends Controller {
     (in, out)
   }
 
-  private def timeToComplete(startTime: Long) = "Elapsed time: " + (System.nanoTime() - startTime)/1000000000.0 + "s"
+  private def timeToComplete(startTime: Long) = {
+    "Elapsed time: " + (System.nanoTime() - startTime)/1000000000.0 + "s"
+  }
+
+  private def stringifyException(ex: Throwable) = {
+    val writer = new StringWriter
+    writer.write(ex.getMessage + "\n")
+    ex.printStackTrace(new PrintWriter(writer, true))
+    writer.toString
+  }
+
+  private def removeCodeSheetWarnings(output: String) = {
+    // TODO Remove the warning message when the code sheet doesn't return it
+    output.replaceAllLiterally("This catches all Throwables. If this is really intended, use `case ex : Throwable` to clear this warning.", "")
+  }
+
 }

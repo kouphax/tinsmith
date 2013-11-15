@@ -1,7 +1,7 @@
 (function(undefined) {
     function evaluate(force) {
         var value = editor.getValue();
-        if(force === true || encodeURI(value) != window.location.search.substring(1)) {
+//        if(force === true || encodeURI(value) != window.location.search.substring(1)) {
             outputs.style.opacity = "0.75"
 
             if (history.pushState) {
@@ -10,7 +10,7 @@
             }
 
             ws.send(value)
-        }
+//        }
     }
 
     function maskOutputs() {
@@ -66,20 +66,20 @@
     ws.onerror = function(){
         unmaskOutputs();
         display.setValue("error");
-        editor.log(arguments);
+        console.log(arguments);
     }
 
 
     if(window.location.search !== "") {
-        maskOutputs();
+//        maskOutputs();
         editor.setValue(decodeURI(window.location.search.substring(1)));
 
-        if(ws.readyState == 1) {
-            evaluate(true);
-        }else {
-            ws.onopen = function() {
-                evaluate(true);
-            }
-        }
+//        if(ws.readyState == 1) {
+//            evaluate(true);
+//        }else {
+//            ws.onopen = function() {
+//                evaluate(true);
+//            }
+//        }
     }
 })()
