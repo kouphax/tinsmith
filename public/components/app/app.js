@@ -39,6 +39,7 @@
 
     var editor = CodeMirror(document.getElementById("code"), codeMirrorSettings({
         mode:  "text/x-scala",
+        autofocus: true,
         extraKeys: {
             "Alt-Enter": evaluate,
             "Cmd-Enter": evaluate
@@ -82,4 +83,6 @@
 //            }
 //        }
     }
+
+
 })()

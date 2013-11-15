@@ -1,11 +1,8 @@
-name := "api"
+name := "tinsmith"
 
-version := "1.0-SNAPSHOT"
+version := "0.0.8"
 
 libraryDependencies ++= Seq(
-  jdbc,
-  anorm,
-  cache,
   "org.scala-lang" % "scala-compiler" % "2.10.3"
 )     
 
