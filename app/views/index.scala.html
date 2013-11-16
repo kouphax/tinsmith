@@ -16,6 +16,9 @@
         </div>
         <script src='@routes.Assets.at("components/codemirror/lib/codemirror.js")'></script>
         <script src='@routes.Assets.at("components/codemirror/mode/clike/clike.js")'></script>
+        <script>
+            var version = '@build.BuildInfo.version'
+        </script>
         <script src='@routes.Assets.at("components/app/app.js")'></script>
     </body>
 </html>

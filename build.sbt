@@ -1,6 +1,14 @@
+buildInfoSettings
+
+sourceGenerators in Compile <+= buildInfo
+
+buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
+
+buildInfoPackage := "build"
+
 name := "tinsmith"
 
-version := "0.0.10"
+version := "0.0.11"
 
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-compiler" % "2.10.3",

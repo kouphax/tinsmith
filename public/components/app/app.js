@@ -1,16 +1,14 @@
-(function(undefined) {
-    function evaluate(force) {
+(function(version, undefined) {
+    function evaluate() {
         var value = editor.getValue();
-//        if(force === true || encodeURI(value) != window.location.search.substring(1)) {
-            outputs.style.opacity = "0.75"
+        maskOutputs()
 
-            if (history.pushState) {
-                var newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?' + encodeURI(value);
-                window.history.pushState({path:newurl},'',newurl);
-            }
+        if (history.pushState) {
+            var newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?' + encodeURI(value);
+            window.history.pushState({path:newurl},'',newurl);
+        }
 
-            ws.send(value)
-//        }
+        ws.send(value)
     }
 
     function maskOutputs() {
@@ -49,7 +47,7 @@
     var display = CodeMirror(document.getElementById("output"), codeMirrorSettings())
 
     var console = CodeMirror(document.getElementById("console"), codeMirrorSettings({
-        value: "Welcome to Tinsmith.\nYou are standing in an open field.\n\nAlt-Enter or ⌘-Enter to evaluate",
+        value: "Welcome to Tinsmith " + (version || "") + "\nYou are standing in an open field.\n\nAlt-Enter or ⌘-Enter to evaluate",
         lineNumberFormatter: function(){
             return ">"
         }
@@ -70,19 +68,8 @@
         console.log(arguments);
     }
 
-
     if(window.location.search !== "") {
-//        maskOutputs();
         editor.setValue(decodeURI(window.location.search.substring(1)));
-
-//        if(ws.readyState == 1) {
-//            evaluate(true);
-//        }else {
-//            ws.onopen = function() {
-//                evaluate(true);
-//            }
-//        }
     }
 
-
-})()
+})(window.version)

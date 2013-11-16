@@ -6,13 +6,6 @@ import com.github.jedesah.codesheet.api.ScalaCodeSheet
 import play.api.libs.json.Json
 import java.lang.reflect.InvocationTargetException
 
-/**
- * Created with IntelliJ IDEA.
- * User: jameshu
- * Date: 15/11/2013
- * Time: 15:11
- * To change this template use File | Settings | File Templates.
- */
 class WorksheetService {
 
   def evaluate(input: String) = {
