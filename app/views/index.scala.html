@@ -1,3 +1,5 @@
+@(text: Option[String])
+
 <!doctype html>
 <html>
     <head>
@@ -14,6 +16,11 @@
                 <div id="console"></div>
             </div>
         </div>
+
+        @text.map { value =>
+            <textarea id="initialValue" style="display:none;">@value</textarea>
+        }
+
         <script src='@routes.Assets.at("components/codemirror/lib/codemirror.js")'></script>
         <script src='@routes.Assets.at("components/codemirror/mode/clike/clike.js")'></script>
         <script src='@routes.Assets.at("components/app/app.js")'></script>

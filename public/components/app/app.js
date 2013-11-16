@@ -70,19 +70,10 @@
         console.log(arguments);
     }
 
-
-    if(window.location.search !== "") {
-//        maskOutputs();
+    var initialValue = document.getElementById("initialValue");
+    if(initialValue) {
+        editor.setValue(initialValue.value);
+    } else if(window.location.search !== "") {
         editor.setValue(decodeURI(window.location.search.substring(1)));
-
-//        if(ws.readyState == 1) {
-//            evaluate(true);
-//        }else {
-//            ws.onopen = function() {
-//                evaluate(true);
-//            }
-//        }
     }
-
-
 })()
