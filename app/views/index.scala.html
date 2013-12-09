@@ -2,14 +2,17 @@
 <html>
     <head>
         <title>Tinsmith: Basic Scala REPL/Worksheet</title>
+        <script src='@routes.Assets.at("components/polymer/polymer.min.js")'></script>
         <link rel="stylesheet" href='@routes.Assets.at("components/codemirror/lib/codemirror.css")'>
         <link rel="stylesheet" href='@routes.Assets.at("components/codemirror/theme/solarized.css")'>
         <link rel="stylesheet" href='@routes.Assets.at("components/app/app.css")'>
+        <link rel="import" href='@routes.Assets.at("components/polymer/polymer-ui-elements/polymer-ui-splitter/polymer-ui-splitter.html")'>
     </head>
     <body>
-        <div id="surface">
+        <div id="surface" class="flexbox">
             <div id="code"></div>
-            <div id="outputs">
+            <polymer-ui-splitter direction="right"></polymer-ui-splitter>
+            <div id="outputs" flex>
                 <div id="output"></div>
                 <div id="console"></div>
             </div>

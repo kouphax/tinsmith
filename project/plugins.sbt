@@ -8,3 +8,5 @@ resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/release
 addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.2.1")
 
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.2.5")
+
+addSbtPlugin("me.lessis" % "bintray-sbt" % "0.1.1")

@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+  <head>
+    <title>template: lost ref</title>
+    <script src="../../../../polymer/polymer.js"></script>
+  </head>
+  <body>
+    <x-test></x-test>
+
+    <template id="x-test">
+      <div>x-test</div>
+      <x-other>
+        <template class="noContent">
+          <div>I am some content!</div>
+        </template>
+      </x-other>
+    </template>
+
+    <script>
+      // get template metrics before manipulation
+      var template_before = document.querySelector('#x-test').content
+          .querySelector('.noContent');
+      var nodes_before = template_before.content.childNodes.length;
+
+      // have fun with custom elements
+      var inDefaultView = false;
+      var proto = Object.create(HTMLElement.prototype);
+      proto.createdCallback = function() {
+        // avoid stamping when inside a template
+        if (!(this.ownerDocument.defaultView || inDefaultView)) {
+          return;
+        }
+        inDefaultView = true;
+        this.makeDom();
+      }
+      proto.makeDom = function() {
+        var template = document.querySelector('#' + this.localName);
+        if (template) {
+          var dom = template.createInstance(this);
+          this.appendChild(dom);
+        }
+      }
+
+
+      var otherProto = Object.create(proto);
+      otherProto.makeDom = function() {
+        var d = document.createElement('div');
+        d.innerHTML = 'Foo';
+        this.appendChild(d);
+      }
+
+
+      document.register('x-other', {prototype: otherProto});
+      document.register('x-test', {prototype: proto});
+
+      // get template metrics after manipulation
+      var template_after = document.querySelector('.noContent');
+      var nodes_after = template_after.ref.content.childNodes.length;
+
+      console.log('childNodes: before', nodes_before, 'after', nodes_after);
+    </script>
+
+  </body>
+</html>

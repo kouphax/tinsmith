@@ -1,0 +1,146 @@
+<!--
+/*
+ * Copyright 2013 The Polymer Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+-->
+<link rel="import" href="../../../polymer-ui-elements/polymer-ui-scaffold/polymer-ui-scaffold.html">
+<link rel="import" href="../../../polymer-ui-elements/polymer-ui-pages/polymer-ui-pages.html">
+<link rel="import" href="../../../polymer-ui-elements/polymer-ui-menu-item/polymer-ui-menu-item.html">
+<link rel="import" href="../../../polymer-ui-elements/polymer-ui-sidebar-menu/polymer-ui-sidebar-menu.html">
+<link rel="import" href="../../../polymer-ui-elements/polymer-ui-toolbar/polymer-ui-toolbar.html">
+<link rel="import" href="pi-toolbar-buttons.html">
+<link rel="import" href="pi-feed-viewer.html">
+<link rel="import" href="pi-explore.html">
+<link rel="import" href="pi-home.html">
+<link rel="import" href="pi-accounts.html">
+<link rel="import" href="pi-accounts-model.html">
+
+<polymer-element name="pi-app" on-keyup="{{keyupHandler}}">
+  <template>
+    <link rel="stylesheet" href="css/pi-app.css">
+    
+    <polymer-ui-scaffold id="panels" hideMenuButton menuActive="{{menuActive}}">
+      <polymer-ui-sidebar-menu id="ribbon" navigation offscreen="basement" class="custom-panel" label="Pica" 
+          selected="{{ribbonSelected}}" valueattr="label" on-polymer-activate="{{showMain}}" theme="polymer-ui-dark-theme">
+        <polymer-ui-menu-item label="Home" src="../images/ribbon_home_lightreg.png"></polymer-ui-menu-item>
+        <polymer-ui-menu-item label="Topics" src="../images/ribbon_topics_lightreg.png"></polymer-ui-menu-item>
+        <polymer-ui-menu-item label="Explore" src="../images/ribbon_explore_lightreg.png"></polymer-ui-menu-item>
+        <polymer-ui-menu-item label="Accounts" src="../images/ribbon_accounts_lightreg.png"></polymer-ui-menu-item>
+      </polymer-ui-sidebar-menu>
+
+      <polymer-ui-icon-button tool icon="{{nav}}" on-tap="{{navAction}}"></polymer-ui-icon-button>
+      <div tool class="toolbar-label flex">{{toolbarLabel}}</div>
+      <polymer-ui-toolbar id="actionbar" tool hidden?="{{hideActionbar}}" responsive>
+        <pi-link-button id="linkButton" link="{{story.link}}" hidden?="{{hideLinkButton}}"></pi-link-button>
+        <pi-view-button id="viewButton" layout="{{selectedLayout}}" halign="right" hidden?="{{hideViewButton}}"></pi-view-button>
+        <pi-action-button halign="right"></pi-action-button>
+        <polymer-ui-icon-button icon="refresh" on-tap="{{reloadAction}}"></polymer-ui-icon-button>
+      </polymer-ui-toolbar>
+
+      <polymer-ui-pages id="contentPanels" main selected="{{ribbonSelected}}" valueattr="id" 
+          on-polymer-select="{{panelSelectAction}}" on-tap="{{showMain}}">
+        <div id="Home"><template if="{{activatedPanels.Home}}">
+            <pi-home stocks="{{$.accountsModel.stocks}}"></pi-home>
+        </template></div>
+        <pi-feed-viewer id="Topics" topics="{{$.accountsModel.topics}}" panel="{{selectedViewPanel}}"
+            layout="{{layout}}" topicsLayout="grid" story="{{story}}"></pi-feed-viewer>
+        <div id="Explore"><template if="{{activatedPanels.Explore}}">
+          <pi-explore isContentPanel panel="{{selectedViewPanel}}"></pi-explore>
+        </template></div>
+        <div id="Accounts"><template if="{{activatedPanels.Accounts}}">
+            <pi-accounts accounts="{{$.accountsModel}}"></pi-accounts>
+        </template></div>
+      </polymer-ui-pages>
+    </polymer-ui-scaffold>
+    
+    <pi-accounts-model id="accountsModel"></pi-accounts-model>
+  </template>
+  <script>
+    (function() {
+      var ESCAPE_KEY = 27;
+      
+      Polymer('pi-app', {
+        ribbonSelected: 'Topics',
+        menuActive: false,
+        selectedViewPanel: '',
+        selectedLayout: null,
+        ready: function() {
+          this.activatedPanels = {};
+          // listen for screen size change
+          var mq = window.matchMedia('(max-width: 800px)');
+          mq.addListener(this.screenSizeChange.bind(this));
+          this.screenSizeChange(mq);
+          // initialization
+          this.selectedLayout = this.layout;
+          this.selectedViewPanel = 'topics';
+        },
+        enteredView: function() {
+          this.super();
+        },
+        screenSizeChange: function(query) {
+          if (query.matches && this.selectedLayout === 'quilt') {
+            // use stream layout if user select quilt and screen size is small
+            this.layout = 'stream';
+          } else {
+            this.layout = this.selectedLayout ||
+                (query.matches ? 'stream' : 'quilt');
+          }
+        },
+        selectedLayoutChanged: function() {
+          this.layout = this.selectedLayout;
+        },
+        getSelectedContentPanel: function() {
+          var p = this.$.contentPanels.selectedItem;
+          return p && p.querySelector('[isContentPanel]') || p;
+        },
+        navAction: function() {
+          var p = this.getSelectedContentPanel();
+          if (!(p.previous && p.previous())) {
+            this.$.panels.menuActionTap();
+          }
+        },
+        showMain: function() {
+          this.menuActive = false;
+        },
+        reloadAction: function() {
+          var p = this.getSelectedContentPanel();
+          p.reload && p.reload();
+        },
+        ribbonSelectedChanged: function() {
+          this.updateToolbar();
+        },
+        selectedViewPanelChanged: function() {
+          this.updateToolbar();
+        },
+        updateToolbar: function() {
+          var p = this.getSelectedContentPanel();
+          this.toolbarLabel = p && p.canPrevious && p.topic ?
+              p.topic.title : this.ribbonSelected;
+          this.nav = p && p.canPrevious ? 'left' : 'menu';
+          this.hideActionbar = this.ribbonSelected !== 'Topics';
+          this.hideViewButton = this.selectedViewPanel !== 'stories';
+          this.hideLinkButton = this.selectedViewPanel !== 'story';
+        },
+        keyupHandler: function(e) {
+          if (e.keyCode === ESCAPE_KEY) {
+            this.navAction();
+          }
+        },
+        // instantiate lazy content
+        panelSelectAction: function(e) {
+          if (e.target.selected) {
+            this.activatedPanels[e.target.selected] = true;
+          }
+        },
+        accountsReadyHandler: function(e) {
+          this.$.Accounts.classList.add('ready');
+        },
+        homeReadyHandler: function(e) {
+          this.$.Home.classList.add('ready');
+        }
+      });
+    })();
+  </script>
+</polymer-element>

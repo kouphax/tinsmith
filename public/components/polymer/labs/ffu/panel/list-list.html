@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>list-list</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width">
+  <script src="../../../polymer/polymer.js"></script>
+  <script src="src/contacts-data.js"></script>
+  <link rel="import" href="../../../polymer-ui-elements/polymer-ui-icon-button/polymer-ui-icon-button.html">
+  <link rel="import" href="../../../polymer-ui-elements/polymer-ui-toolbar/polymer-ui-toolbar.html">
+  <style>
+    html, body {
+      height: 100%;
+    }
+    body {
+      margin: 0;
+      background: #000;
+    }
+    x-list-list {
+      height: 100%;
+      max-width: 400px;
+      max-height: 540px;
+      margin: 0 auto;
+      -webkit-tap-highlight-color: rgba(0,0,0,0);
+      -webkit-touch-callout: none;
+    }
+  </style>
+</head>
+<body>
+
+<polymer-element name="x-list-list">
+  <template>
+    <style>
+      @host {
+        * {
+          position: relative;
+          display: block;
+          font: 14px 'Helvetica Neue', Helvetica, Roboto, Arial;
+          background: #fff;
+        }
+      }
+      #home {
+        position: absolute;
+        top: 61px;
+        right: 0;
+        bottom: 0;
+        left: 0;
+      }
+      #list {
+        position: absolute;
+        top: 61px;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: #fff;
+        opacity: 0;
+
+        -webkit-transition: opacity 0.3s ease-in;
+        transition: opacity 0.3s ease-in;
+      }
+      .panel-selected {
+        z-index: 1;
+      }
+      #cards, #folders {
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+      }
+      #folders {
+        -webkit-transition: top 0.15s linear, opacity 0.15s linear;
+        transition: top 0.15s linear, opacity 0.15s linear;
+      }
+      .alpha-header {
+        height: 60px;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        background-color: rgba(128, 128, 128, 0.1);
+        color: #aaa;
+        padding: 20px 20px 20px 26px;
+        font-size: 20px;
+      }
+      .card {
+        background-color: #fff;
+        border-top: 1px solid #eee;
+      }
+      .item, .folder {
+        height: 80px;
+        position: relative;
+        border-bottom: 1px solid #eee;
+      }
+      .folder {
+        line-height: 80px;
+        color: #333;
+        font-size: 21px;
+        padding-left: 15px;
+
+        -webkit-transition: margin 0.15s linear;
+        transition: margin 0.15s linear;
+      }
+      .folder > span {
+        padding-left: 8px;
+        vertical-align: middle;
+      }
+      .avatar-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 60px;
+        padding: 15px 0 15px 15px;
+      }
+      #avatar {
+        width: 50px;
+        height: 50px;
+        background: #cdcdcd;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 50px;
+        color: #fff;
+        font-size: 20px;
+      }
+      #avatar.favorite {
+        background: #4d90fe;
+      }
+      .summary {
+        position: absolute;
+        top: 0;
+        left: 80px;
+        right: 0;
+        bottom: 0;
+        padding: 12px 5px;
+      }
+      .name {
+        color: #333;
+        font-size: 21px;
+        padding-top: 15px;
+      }
+      polymer-ui-toolbar {
+        background-color: #4d90fe !important;
+        z-index: 10;
+      }
+      polymer-ui-toolbar > polymer-ui-icon-button {
+        margin: 0 8px !important;
+      }
+      #toolbarLabel {
+        color: #fff;
+      }
+    </style>
+
+    <polymer-ui-toolbar theme="polymer-ui-light-theme">
+      <polymer-ui-icon-button icon="shrink" on-tap="{{shrinkAction}}"></polymer-ui-icon-button>
+      <div id="toolbarLabel">Contacts</div>
+      <div flex></div>
+      <polymer-ui-icon-button icon="search"></polymer-ui-icon-button>
+    </polymer-ui-toolbar>
+    <div id="home">
+      <div id="folders">
+        <template repeat="{{folders}}">
+          <div class="folder" on-tap="{{folderTap}}">
+            <polymer-ui-icon icon="contact"></polymer-ui-icon>
+            <span>{{name}}</span>
+          </div>
+        </template>
+      </div>
+    </div>
+    <div id="list">
+      <div id="cards">
+        <template repeat="{{alphaContacts}}">
+          <div class="alpha-header">{{title}}</div>
+          <div class="card">
+            <template repeat="{{contacts}}">
+              <div class="item">
+                <div class="avatar-container">
+                  <div id="avatar" class="{{favorite: isFavorite == 1}}">{{initials}}</div>
+                </div>
+                <div class="summary">
+                  <div class="name">{{name}}</div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+      </div>
+    </div>
+  </template>
+  <script>
+    Polymer('x-list-list', {
+      margin: 300,
+      listShowing: false,
+      folders: [{name: 'Global'}, {name: 'Favorites'}, {name: 'My Contacts'}, {name: 'Work'}, {name: 'Family'}],
+      ready: function() {
+        this.alphaContacts = alphaContacts();
+        this.expandTransitionEndListener = this.exapndTransitionEnd.bind(this);
+        this.shrinkTransitionEndListener = this.shrinkTransitionEnd.bind(this);
+        this.listShowingChanged();
+      },
+      folderTap: function(e, detail, sender) {
+        this.expandAction(sender);
+      },
+      expandAction: function(item) {
+        this.selected = item;
+        this.listShowing = true;
+        this.selected.addEventListener('webkitTransitionEnd', this.expandTransitionEndListener);
+        this.selected.addEventListener('transitionend', this.expandTransitionEndListener);
+        this.$.folders.style.top = -this.margin/2 + 'px';
+        this.$.folders.style.opacity = 0;
+        this.selected.style.marginBottom = this.margin + 'px';
+        this.$.list.style.visibility = 'initial';
+        this.$.list.style.opacity = 1;
+      },
+      exapndTransitionEnd: function() {
+        this.$.toolbarLabel.textContent = this.selected.templateInstance.model.name;
+        this.selected.removeEventListener('webkitTransitionEnd', this.expandTransitionEndListener);
+        this.selected.removeEventListener('transitionend', this.expandTransitionEndListener);
+        this.$.home.style.visibility = 'hidden';
+        this.$.list.style.visibility = 'visible';
+      },
+      shrinkAction: function() {
+        if (!this.listShowing) {
+          return;
+        }
+        this.$.list.addEventListener('webkitTransitionEnd', this.shrinkTransitionEndListener);
+        this.$.list.addEventListener('transitionend', this.shrinkTransitionEndListener);
+        this.$.list.style.opacity = 0;
+        this.$.home.style.visibility = 'initial';
+        this.$.folders.style.top = 0;
+        this.$.folders.style.opacity = 1;
+        this.selected.style.marginBottom = 0;
+        this.listShowing = false;
+        this.$.toolbarLabel.textContent = 'Contacts';
+      },
+      shrinkTransitionEnd: function() {
+        this.$.list.removeEventListener('webkitTransitionEnd', this.shrinkTransitionEndListener);
+        this.$.list.removeEventListener('transitionend', this.shrinkTransitionEndListener);
+        this.$.home.style.visibility = 'visible';
+        this.$.list.style.visibility = 'hidden';
+      },
+      listShowingChanged: function() {
+        this.$.home.classList.toggle('panel-selected', !this.listShowing);
+        this.$.list.classList.toggle('panel-selected', this.listShowing);
+      }
+    });
+  </script>
+</polymer-element>
+
+<x-list-list></x-list-list>
+
+</body>
+</html>

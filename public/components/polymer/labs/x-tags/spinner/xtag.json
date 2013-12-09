@@ -1,0 +1,33 @@
+{
+	"name": "Spinner",
+	"tagName": "x-spinner",
+	"version": "0.2.0",
+	"author": "Potch",
+	"description": "A loading spinner with optional status text",
+	"images": [],
+	"categories": [
+		"ui"
+	],
+	"demo": "demo/index.html",
+	"compatibility": {
+		"firefox": 5,
+		"chrome": 4,
+		"opera": 12,
+		"android": 2.1,
+		"ios": 4
+	},
+	"documentation": {
+		"getters": {
+			"duration": "Time it takes spinner to complete rotation",
+			"label": "Text to display within the spinner",
+			"reverse": "If present, spinner will rotate counterclockwise instead of clockwise",
+			"src": "URL of image to use in place of CSS spinner"
+		},
+		"setters": {
+			"duration": "Time it takes spinner to complete rotation",
+			"label": "Text to display within the spinner",
+			"reverse": "If present, spinner will rotate counterclockwise instead of clockwise",
+			"src": "URL of image to use in place of CSS spinner"
+		}
+	}
+}

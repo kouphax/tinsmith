@@ -1,0 +1,155 @@
+<!--
+/*
+ * Copyright 2013 The Polymer Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+-->
+
+<link rel="import" href="../../../polymer-elements/polymer-grid-layout/polymer-grid-layout.html">
+<link rel="import" href="../../../polymer-elements/polymer-media-query/polymer-media-query.html">
+<link rel="import" href="../../../polymer-ui-elements/polymer-ui-icon/polymer-ui-icon.html">
+<link rel="import" href="../../../polymer-ui-elements/polymer-ui-tabs/polymer-ui-tabs.html">
+<link rel="import" href="shuttle-data.html">
+<link rel="import" href="shuttle-schedule.html">
+<link rel="import" href="shuttle-favorites.html">
+<link rel="import" href="shuttle-map.html">
+  
+<polymer-element name="shuttle-app">
+  <template>
+    <style>
+      @host {
+        * {
+          color: #333;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+          -webkit-tap-highlight-color: rgba(0,0,0,0);
+          -webkit-touch-callout: none;
+        }
+      }
+      
+      #tabbar {
+        height: 46px !important;
+        border-top: 1px solid #bababa;
+      }
+      
+      #tabbar > * {
+        display: block;
+        height: 45px !important;
+        line-height: 45px !important;
+        text-align: center;
+        width: 160px;
+      }
+      
+      #tabbar > [hidden] {
+        display: none !important;
+      }
+      
+      #tabbar > .polymer-selected {
+        background-color: #ccc !important;
+      }
+      
+      #schedule, #favorites {
+        display: none;
+      }
+      
+      #schedule.selected-view, #favorites.selected-view {
+        display: block;
+        visibility: visible;
+      }
+      
+      .card {
+        background-color: #fff;
+        border-radius: 2px;
+        box-shadow: rgba(0, 0, 0, 0.14902) 0px 2px 4px, rgba(0, 0, 0, 0.14902) 0px 0px 3px;
+      }
+      
+      #favorites {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 300px;
+        margin: 20px;
+        max-height: calc(100% - 80px);
+        z-index: 1;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      /* @polyfill-unscoped-rule #favorites {
+        max-height: -webkit-calc(100% - 80px);
+      } */
+      
+      @media screen and (max-width: 360px) {
+        #favorites {
+          width: auto;
+          right: 0;
+          margin: 10px;
+        }
+      }
+    </style>
+
+    <polymer-media-query query="max-width: 800px" queryMatches="{{queryMatches}}"></polymer-media-query>
+    <shuttle-data id="data" route="{{route}}" officeStops="{{officeStops}}" remoteStops="{{remoteStops}}" favorites="{{favorites}}"></shuttle-data>
+
+    <shuttle-schedule id="schedule" route="{{route}}" officeStops="{{officeStops}}" remoteStops="{{remoteStops}}" 
+        centerStop="{{centerStop}}" fromStop="{{fromStop}}" toStop="{{toStop}}" 
+        favorites="{{favorites}}" favorite="{{favorite}}" filteredStops="{{filteredStops}}" 
+        selectedFilteredStop="{{selectedFilteredStop}}" on-shuttle-data-save="{{saveData}}"></shuttle-schedule>
+
+    <shuttle-favorites id="favorites" class="card" favorites="{{favorites}}" favorite="{{favorite}}" 
+        on-polymer-activate="{{favoriteSelect}}" on-shuttle-favorites-change="{{favoritesChange}}"></shuttle-favorites>
+  
+    <div id="basement">
+      <polymer-grid-layout layout="{{layout}}"></polymer-grid-layout>
+      
+      <shuttle-map id="map" centerStop="{{centerStop}}" fromStop="{{fromStop}}" toStop="{{toStop}}"
+          filteredStops="{{filteredStops}}" selectedFilteredStop="{{selectedFilteredStop}}"></shuttle-map>
+          
+      <polymer-ui-tabs id="tabbar" theme="polymer-ui-light-theme" selected="{{tabSelected}}">
+        <div name="schedule" flex?="{{queryMatches}}"><polymer-ui-icon src="assets/ic_schedule_darkreg.png"></polymer-ui-icon></div>
+        <div name="favorites" flex?="{{queryMatches}}"><polymer-ui-icon src="assets/ic_favorite_darkreg.png"></polymer-ui-icon></div>
+      </polymer-ui-tabs>
+    </div>
+  </template>
+  <script>
+    Polymer('shuttle-app', {
+      tabSelected: null,
+      queryMatches: false,
+      ready: function() {
+        this.layout = [
+          [1],
+          [1], 
+          [2]
+        ];
+        this.tabSelected = 'schedule';
+        window.addEventListener('resize', function() {
+          this.$.map.resize();
+        }.bind(this));
+      },
+      enteredView: function() {
+        this.$.map.resize();
+      },
+      tabSelectedChanged: function(old) {
+        this.classFollows(this.$[this.tabSelected], this.$[old], 
+            'selected-view');
+        if (this.tabSelected === 'favorites') {
+          this.$.favorites.clearSelection();
+        }
+      },
+      favoriteSelect: function() {
+        this.tabSelected = 'schedule';
+      },
+      favoritesChange: function() {
+        this.$.schedule.updateFav();
+        this.saveData();
+      },
+      saveData: function() {
+        this.$.favorites.clearSelection();
+        this.$.data.save();
+      }
+    });
+  </script>
+</polymer-element>

@@ -1,0 +1,63 @@
+<link rel="import" href="../polymer-virtual-list/polymer-virtual-list.html">
+
+<polymer-element name="polymer-list" extends="polymer-virtual-list" attributes="data listData">
+  <script>
+    Polymer('polymer-list', {
+      ready: function() {
+        this.data = [];
+        this.listData = [];
+        this.super();
+      },
+      dataChanged: function() {
+        this.count = this.data.length;
+        //console.log('dataChanged', this.count);
+      },
+      generatePageContent: function(page, start, end) {
+        this.super();
+        var pageClass = 'page' + page.pageNum;
+        // mdv is very unhappy if our array is sparse!
+        var start = Math.min(this.listData.length, start);
+        // NOTE: allowing this array to simply grow destroys perf.
+        // add this page of data to our data window; insert page class
+        /*
+        for (var i=start, l=end, d; i<l; i++) {
+          // TODO(sorvell): copying like this probably isn't kosher
+          // but we want to add the page class 
+          d = this.listData[i] = Object.create(this.data[i]);
+          d.page = pageClass;
+        }
+        */
+        // add a content w/select into this page
+        var c = document.createElement('content');
+        c.select = '.' + pageClass;
+        page.appendChild(c);
+      },
+      generateListData: function(info) {
+        var start = info.start * this.pageSize;
+        var end = Math.min(start + this.pageSize * this.numPages, this.count);
+        this.fire('polymer-list-generate-data', {start: start, end: end});
+        // produce data window
+        this.listData = [];
+        for (var i=0, l=end-start, d, pageClass; i<l; i++) {
+          d = this.listData[i] = Object.create(this.data[start+i]);
+          d.page = 'page' + Math.floor((start+i) / this.pageSize);
+        }
+      },
+      invalidatePages: function(info) {
+        this.generateListData(info);
+        this.super(arguments);
+        if (!this.fixedHeight || !this.rowHeight) {
+          this.onMutation(this, function() {
+            this.invalidate(info);
+          });
+        }
+      },
+      mutationNodeForPage: function(page) {
+        return this;
+      },
+      findRowOnPage: function(page, index) {
+        return this.querySelectorAll('.page' + page.pageNum)[index];
+      }
+    });
+  </script>
+</polymer-element>

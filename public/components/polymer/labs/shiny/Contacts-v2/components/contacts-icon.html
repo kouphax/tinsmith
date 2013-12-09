@@ -1,0 +1,43 @@
+<polymer-element name="contacts-icon" attributes="contact large">
+	<template>
+		<style>
+			.contactIcon {
+				background-color: rgb(242, 242, 242);
+				border-radius: 20px;
+				border: 1px solid rgba(0, 0, 0, 0.14902);
+				margin-right: 20px;
+				padding: 8px;
+				width: 24px;
+				height: 24px;
+				line-height: 24px;
+				font-family: 'Open Sans', Open-Sans, sans-serif;
+				font-size: 16px;
+				text-align: center;
+				color: #d3d2d3;
+			}
+			.contactIcon.large {
+				border-radius: 48px;
+				font-size: 48px;
+				padding: 16px;
+				width: 48px;
+				height: 48px;
+				line-height: 48px;
+				background-size: 95%;
+				background-position: 3px 0px;
+			}
+		</style>
+		<template if="{{large}}">
+			<div class="contactIcon large" style="background-image: url('{{contact.picture}}?{{contact.guid}}');"></div>
+		</template>
+		<template if="{{!large}}">
+			<div class="contactIcon">
+				{{contact.initials}}
+			</div>
+		</template>
+	</template>
+	<script>
+		Polymer('contacts-icon', {
+			large: false
+		});
+	</script>
+</polymer-element>

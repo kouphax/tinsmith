@@ -1,0 +1,222 @@
+<!--
+/*
+ * Copyright 2013 The Polymer Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+-->
+
+<link rel="import" href="../../../polymer-elements/polymer-overlay/polymer-overlay.html">
+<link rel="import" href="../../../polymer-elements/polymer-selector/polymer-selector.html">
+<link rel="import" href="../../../polymer-ui-elements/polymer-ui-icon/polymer-ui-icon.html">
+<link rel="import" href="../../../polymer-ui-elements/polymer-ui-collapsible/polymer-ui-collapsible.html">
+
+<polymer-element name="shuttle-stop-picker" attributes="query stops selected selectedStop focusedStop">
+  <template>
+    <style>
+      #stops {
+        display: block;
+        height: 100%;
+        overflow: hidden;
+      }
+      
+      .stops-list {
+        display: none;
+      }
+      
+      .stops-list.polymer-selected {
+        display: block;
+      }
+      
+      .folder {
+        height: 40px;
+        line-height: 40px;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        padding-left: 16px;
+        font-size: 12px;
+        color: #888;
+        font-weight: 500;
+        border-bottom: 1px solid #ddd;
+      }
+      
+      .group-header {
+        height: 50px;
+        line-height: 50px;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        padding-left: 4px;
+        font-size: 14px;
+        font-weight: bold;
+        border-bottom: 1px solid #ddd;
+      }
+      
+      polymer-ui-icon-button[icon=dropdown]:not(.active) {
+        -webkit-transform: rotate(270deg);
+        transform: rotate(270deg);
+      }
+      
+      .stop {
+        position: relative;
+        height: 45px;
+        line-height: 45px;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        padding-left: 48px;
+        font-size: 14px;
+        font-weight: bold;
+      }
+      
+      .stop:last-child {
+        border-bottom: 1px solid #ddd;
+      }
+      
+      .stop.filtered {
+        height: 50px;
+        line-height: 50px;
+        padding-left: 18px;
+        border-bottom: 1px solid #ddd;
+      }
+      
+      .stop[focused] {
+        background: #cdcdcd;
+      }
+      
+      .stop-label {
+        display: inline-block;
+        width: 95%;
+        vertical-align: middle;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      .check-icon {
+        visibility: hidden;
+        position: absolute;
+        top: 12px;
+        left: 16px;
+      }
+      
+      .polymer-selected > .check-icon {
+        visibility: visible;
+      }
+      
+      [hidden] {
+        display: none;
+      }
+    </style>
+    
+    <polymer-selector id="selector" target="{{$.stops}}" itemsSelector=".stop" 
+        valueattr="name" selected="{{selected}}" selectedItem="{{selectedItem}}"
+        selectedModel="{{selectedStop}}" on-polymer-activate="{{closeAction}}"></polymer-selector>
+    
+    <polymer-selector id="stops" selected="{{mode}}" touch-action="pan-y" on-pointerdown="{{hideKeyboard}}">
+      <div class="stops-list">
+        <template repeat="{{folders}}">
+          <template if="{{groups.length}}">
+            <div class="folder">{{name}}</div>
+          </template>
+          <template repeat="{{groups}}">
+            <polymer-ui-collapsible active="{{active}}" class="group">
+              <div class="polymer-ui-collapsible-header group-header">
+                <polymer-ui-icon-button icon="dropdown" src="assets/ic_arrow_triangledown_darkreg.png" class="{{{active: active} | tokenList}}"></polymer-ui-icon-button>
+                {{name}}
+              </div>
+              <template repeat="{{stops}}">
+                <div class="stop" name="{{name}}" focused?="{{focused}}">
+                  <polymer-ui-icon class="check-icon" src="assets/ic_check_darkreg.png"></polymer-ui-icon>
+                  <div class="stop-label">{{name}}</div>
+                </div>
+              </template>
+            </polymer-ui-collapsible>
+          </template>
+        </template>
+      </div>
+      <div class="stops-list">
+        <template repeat="{{groups}}">
+          <template repeat="{{stops}}">
+            <div class="stop filtered" name="{{name}}" hidden?="{{hidden}}" focused?="{{focused}}">
+              <polymer-ui-icon class="check-icon" src="assets/ic_check_darkreg.png"></polymer-ui-icon>
+              <div class="stop-label">{{name}}</div>
+            </div>
+          </template>
+        </template>
+      </div>
+    </polymer-selector>
+  </template>
+  <script>
+    Polymer('shuttle-stop-picker', {
+      query: '',
+      mode: 0,
+      update: function() {
+        this.query = '';
+        this.search();
+        if (this.selectedItem) {
+          this.scrollToStop(this.selectedItem);
+        }
+      },
+      scrollToStop: function(stop) {
+        stop.parentNode.active = true;
+        this.async(function() {
+          stop.scrollIntoViewIfNeeded ? stop.scrollIntoViewIfNeeded() : 
+              stop.scrollIntoView();
+        }, null, 500);
+      },
+      closeAction: function() {
+        this.fire('shuttle-picker-close');
+      },
+      stopsChanged: function() {
+        var remote = [], office = [];
+        this.stops.forEach(function(s) {
+          var groups = s.is_work ? office : remote; 
+          var g = groups[s.group];
+          if (!g) {
+            g = groups[s.group] = {
+              name: Shuttle.groups[s.group].name,
+              stops: []
+            };
+          }
+          g.stops.push(s);
+        }, this);
+        this.folders = [
+          {name: Shuttle.officeLabel || 'Google', groups: office}, 
+          {name: 'Remote', groups: remote}
+        ];
+        this.groups = office.concat(remote);
+      },
+      focusedStopChanged: function(old) {
+        if (old) {
+          old.focused = false;
+        }
+        if (this.focusedStop) {
+          this.focusedStop.focused = true;
+          var n = this.$.stops.querySelector(
+              '[name="' + this.focusedStop.name + '"]');
+          this.scrollToStop(n);
+        }
+      },
+      queryChanged: function() {
+        this.mode = this.query ? 1 : 0;
+        this.asyncSearch();
+      },
+      asyncSearch: function() {
+        this.searchJob = this.job(this.searchJob, this.search, 300);
+      },
+      search: function() {
+        var q = this.query && this.query.toLowerCase();
+        this.groups.forEach(function(g) {
+          var t = g.stops.length;
+          var gh = g.name.toLowerCase().indexOf(q) < 0;
+          g.stops.forEach(function(s) {
+            s.hidden = s.name.toLowerCase().indexOf(q) < 0 && gh;
+          });
+        });
+        this.fire('shuttle-stops-search');
+      },
+      hideKeyboard: function() {
+        document.activeElement.blur();
+      }
+    });
+  </script>
+</polymer-element>

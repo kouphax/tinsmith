@@ -1,0 +1,48 @@
+/* ShadowDOM styling */
+:host {
+  display: block;
+  overflow: hidden;
+}
+
+/* @polyfill .polymer-list-item */
+::content > .polymer-list-item, .polymer-list-item {
+  box-sizing: border-box;
+  height: 80px;
+  line-height: 80px;
+  padding: 0 20px;
+  background-color: #f8f8f8;
+  border-bottom: 1px solid #ddd;
+  overflow: hidden;
+}
+
+.polymer-list-list {
+  height: 100%;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.polymer-list-viewport {
+  position: relative;
+}
+
+.polymer-list-viewport.horizontal {
+  height: 100%;
+  white-space: nowrap;
+}
+
+.polymer-list-viewport > * {
+  position: absolute;
+  overflow: hidden;
+  /*-webkit-transform: translateZ(0);
+  transform: translateZ(0);*/
+}
+
+.polymer-list-viewport:not(.horizontal) > * {
+  left: 0;
+  right: 0;
+}
+
+.polymer-list-viewport.horizontal > * {
+  top: 0;
+  bottom: 0;
+}
