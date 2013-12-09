@@ -1,0 +1,19 @@
+{
+  "name": "x-spinner",
+  "description": "A loading spinner with optional status text",
+  "version": "0.2.0",
+  "keywords": [
+    "web-components",
+    "spinner",
+    "progress",
+    "element",
+    "x-tag"
+  ],
+  "main": [
+    "src/spinner.js",
+    "src/spinner.css"
+  ],
+  "dependencies": {
+    "x-tag-core": "*"
+  }
+}

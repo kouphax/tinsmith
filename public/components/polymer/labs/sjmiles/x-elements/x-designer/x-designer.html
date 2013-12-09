@@ -1,0 +1,172 @@
+<!--
+Copyright 2013 The Polymer Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+-->
+<link rel="import" href="../../../../polymer-elements/polymer-layout/polymer-layout.html">
+<link rel="import" href="../x-designable/x-designable.html">
+<link rel="import" href="../x-palette/x-palette.html">
+<link rel="import" href="../x-tree/x-tree.html">
+
+<polymer-element name="x-designer" attributes="selected maximized">
+  <template>
+    <style>
+      @host {
+        * {
+          position: absolute;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          outline: 0;
+        }
+      }
+      /*
+      #palette {
+        position: absolute;
+        top: 0;
+        width: 264px;
+        bottom: 0;
+        left: 0;
+        -webkit-transition: left 0.4s;
+        transition: left 0.4s;
+        z-index: 1;
+        box-shadow: 5px 0 8px rgba(0, 0, 0, 0.16);
+      }
+      #canvas {
+        position: absolute;
+        top: 0px;
+        right: 0;
+        bottom: 0;
+        left: 264px;
+        background-color: white;
+        overflow: hidden;
+        -webkit-transition: left 0.4s;
+        transition: left 0.4s;
+      }
+      #designElement {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+      }
+      .selected-element {
+        outline: solid 10px rgba(72, 154, 254, 0.20);
+        outline-offset: -2px;
+      }
+      .tab-selected {
+        z-index: 100;
+      }
+      #palette.maximized {
+        left: -264px;
+      }
+      #canvas.maximized {
+        left: 0px;
+      }
+      */
+      #palette {
+        width: 264px;
+        box-shadow: 5px 0 8px rgba(0, 0, 0, 0.16);
+        z-index: 1;
+        -webkit-transition: left 0.4s;
+        transition: left 0.4s;
+      }
+      #canvas {
+        background-color: white;
+        overflow: hidden;
+        -webkit-transition: left 0.4s;
+        transition: left 0.4s;
+      }
+      #tree {
+        width: 250px;
+      }
+      .selected-element {
+        outline: solid 10px rgba(72, 154, 254, 0.20);
+        outline-offset: -2px;
+      }
+    </style>
+
+    <x-meta id="meta" categories="{{elements}}"></x-meta>
+
+    <polymer-layout></polymer-layout>
+    <x-palette id="palette" elements="{{elements}}" canvas="{{$.canvas}}" on-palette-drag="{{paletteDrag}}"></x-palette>
+    <x-designable flex id="canvas" tabIndex="-1" selected="{{selected}}" on-design-change="{{designChange}}"></x-designable>
+    <x-tree id="tree" canvas="{{$.canvas}}" selected="{{selected}}"></x-tree>
+
+  </template>
+  <script>
+  (function() {
+    Polymer('x-designer', {
+      maximized: false,
+      selectedTab: 'design',
+      ready: function() {
+      },
+      paletteDrag: function(event, drag) {
+        this.$.canvas.drag(drag);
+      },
+      designChange: function() {
+        this.$.tree.update();
+      },
+      maximizedChanged: function() {
+        this.$.palette.classList.toggle('maximized', this.maximized);
+        this.$.canvas.classList.toggle('maximized', this.maximized);
+      },
+      inspectTarget: function(event) {
+        var t = event.target;
+        if (t) {
+          if (t === this.$.canvas) {
+            this.selected = null;
+          } else {
+            // don't allow selection within a node with meta.hideSubtree
+            var n = t;
+            while (n) {
+              if (n.meta && n.meta.hideSubtree) {
+                t = n;
+                break;
+              }
+              n = n.parentNode;
+            }
+            this.selected = t;
+          }
+          Platform.flush();
+        }
+      }
+      /*
+      applyPropertyBinding: function(obj, name, path) {
+        this.$.designElement.applyPropertyBinding(obj, name, path);
+      },
+      applySource: function(source) {
+        this.$.designElement = this.$.designElement.applySource(source);
+      },
+      sourceApplied: function(event, node) {
+        this.$.meta.ensureMeta(node);
+        // reselect selection
+        if (this.selected && this.selected.id) {
+          var selected = this.$.canvas.querySelector('#' + this.selected.id);
+        }
+        this.selected = selected || this.$.designElement;
+      },
+      publishElement: function(source) {
+        this.$.publisher.publishElement(source);
+      },
+      dumpPreviewSource: function(source) {
+        var n = this.$.designElement.elementAttributes.name;
+        source = source + '\n<' + n + '></' + n + '>';
+        return source;
+      },
+      previewElement: function(source) {
+        this.$.preview.open(this.dumpPreviewSource(source));
+      },
+      previewElementSource: function(source) {
+        this.$.preview.openSource(this.dumpPreviewSource(source));
+      },
+      clearElement: function() {
+        Platform.flush();
+        this.applySource(this.$.designElement.defaultSource);
+      }
+      */
+    });
+  })();
+  </script>
+</polymer-element>

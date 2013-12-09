@@ -1,0 +1,113 @@
+<link href="../../../../polymer-elements/polymer-flex-layout/polymer-flex-layout.html" rel="import">
+<link href="../../../../polymer-elements/polymer-selector/polymer-selector.html" rel="import">
+<link href="../../../../polymer-ui-elements/polymer-ui-icon-button/polymer-ui-icon-button.html" rel="import">
+<link href="../../../../polymer-ui-elements/polymer-ui-menu-item/polymer-ui-menu-item.html" rel="import">
+<link href="../../../../polymer-ui-elements/polymer-ui-overlay/polymer-ui-overlay.html" rel="import">
+<polymer-element name="contacts-create-item" attributes="icon activeIcon label value error selectedType active overlayActive" on-focus="{{focusAction}}" on-blur="{{blurAction}}">
+	<template>
+		<style>
+			/* @polyfill @host */
+			:host {
+				padding: 16px;
+				border-color: rgba(0, 0, 0, 0.14902);
+				border-width: 0 0 1px;
+				border-style: solid;
+			}
+			input {
+				margin: 0 0 0 16px;
+				padding: 0;
+				border: none;
+				font-size: 14px;
+				font-family: 'Helvetica Neue Medium', HelveticaNeue-Medium, Helvetica, sans-serif;
+				box-sizing: border-box;
+				background: transparent;
+			}
+			input:focus {
+				outline: none;
+			}
+			.hidden {
+				/* FIXME: outside should win */
+				display: none !important;
+			}
+			#typeOverlay {
+				left: 8px;
+				box-shadow: 5px 5px 5px rgba(50, 50, 50, 0.6);
+			}
+			#typeOverlay polymer-ui-menu-item {
+				font-size: 14px !important;
+				font-family: 'Helvetica Neue Medium', HelveticaNeue-Medium, Helvetica, sans-serif;
+				padding: 16px !important;
+				border-color: rgba(0, 0, 0, 0.15) !important;
+				border-width: 0 1px 1px !important;
+				border-style: solid !important;
+				height: auto !important;
+			}
+			/* FIXME: Safari drops the whole rule if it doesn't recognize the selector. */
+			#typeOverlay content::-webkit-distributed(polymer-ui-menu-item) {
+				font-size: 14px !important;
+				font-family: 'Helvetica Neue Medium', HelveticaNeue-Medium, Helvetica, sans-serif;
+				padding: 16px !important;
+				border-color: rgba(0, 0, 0, 0.15) !important;
+				border-width: 0 1px 1px !important;
+				border-style: solid !important;
+				height: auto !important;
+			}
+		</style>
+		<polymer-flex-layout align="center"></polymer-flex-layout>
+		<polymer-ui-icon-button icon="{{icon}}" class="{{ {hidden: active || overlayActive || value || selectedType !== -1} | tokenList}}"></polymer-ui-icon-button>
+		<polymer-ui-icon-button id="activeIcon" icon="{{activeIcon}}" class="{{ {hidden: !value && selectedType === -1 && !active && !overlayActive} | tokenList}}" on-tap="{{overlayAction}}"></polymer-ui-icon-button>
+		<div flex>
+			<input id="input" value="{{value}}" placeholder="{{label}}">
+		</div>
+		<polymer-ui-icon-button icon="close" class="{{ {hidden: !active && !overlayActive} | tokenList}}" on-tap="{{cancelAction}}"></polymer-ui-icon-button>
+		<polymer-ui-icon-button src="error.png" class="{{ {hidden: !error || active} | tokenList}}" on-tap="{{errorAction}}"></polymer-ui-icon-button>
+		<polymer-ui-overlay id="typeOverlay" active="{{overlayActive}}" modal backdrop on-polymer-overlay-open="{{overlayOpenAction}}">
+			<polymer-selector selected="{{selectedType}}" on-polymer-activate="{{overlaySelectAction}}">
+				<content></content>
+			</polymer-selector>
+		</polymer-ui-overlay>
+	</template>
+	<script>
+		Polymer('contacts-create-item', {
+			active: false,
+			overlayActive: false,
+			error: false,
+			icon: 'plus',
+			selectedType: -1,
+			enteredView: function() {
+				this.$.typeOverlay.style.width = (window.innerWidth - 20) + 'px';
+			},
+			focusAction: function() {
+				this.active = true;
+			},
+			blurAction: function() {
+				// Async so if the tap events from the buttons have a chance to fire.
+				this.async(function() {
+					this.active = false;
+					if (!this.value) {
+						this.cancelAction();
+					}
+				}, null, 100);
+				this.$.input.blur();
+			},
+			cancelAction: function() {
+				this.value = '';
+				this.selectedType = -1;
+				this.fire('contacts-create-item-cancel');
+			},
+			errorAction: function() {
+				this.fire('contacts-create-item-error');
+			},
+			overlayAction: function() {
+				this.$.typeOverlay.toggle();
+			},
+			overlaySelectAction: function(e, detail, sender) {
+				this.activeIcon = detail.item.icon;
+				this.$.typeOverlay.toggle();
+			},
+			focus: function() {
+				this.$.input.focus();
+			}
+		});
+		</script>
+</polymer-element>

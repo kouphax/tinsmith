@@ -1,0 +1,52 @@
+<!--
+/*
+ * Copyright 2013 The Polymer Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+-->
+<link rel="import" href="elements.html">
+<polymer-element name="yt-app" theme="polymer-ui-light-theme">
+  <template>
+    <link rel="stylesheet" href="css/yt-app.css">
+    <link rel="stylesheet" href="../../../polymer-ui-elements/basic.css">
+    <polymer-ui-scaffold id="panels" class="polymer-ui-fit" menuActive="{{menuActive}}" on-polymer-grid-layout="{{autoFocus}}">
+      <div id="listPanel" navigation>
+        <yt-search id="search" query="{{query}}" list="{{list}}"></yt-search>
+        <polymer-ui-toolbar theme="polymer-ui-dark-theme">
+          <input value="{{query}}" x-webkit-speech autofocus></input>
+        </polymer-ui-toolbar>
+        <polymer-selector id="list" on-polymer-activate="{{listActivateAction}}">
+          <template repeat="{{list}}">
+            <div class="item">{{title.$t}}</div>
+          </template>
+        </polymer-selector>
+      </div>
+      <div tool>
+        <template if="{{video}}">
+          {{video.title.$t}}
+        </template>
+      </div>
+      <yt-video  id="videoPanel" main videoEntry="{{video}}"></yt-video>
+    </polymer-ui-scaffold>
+  </template>
+  <script>
+    Polymer('yt-app', {
+      query: 'chrome commercial',
+      menuActive: true,
+      autoFocus: function() {
+        var node = this.shadowRoot.querySelector('[autofocus]');
+        if (node) {
+          node.focus();
+        }
+      },
+      queryChanged: function() {
+        this.$.list.selected = null;
+      },
+      listActivateAction: function() {
+        this.video = this.$.list.selectedModel;
+        this.menuActive = false;
+      }
+    });
+  </script>
+</polymer-element>

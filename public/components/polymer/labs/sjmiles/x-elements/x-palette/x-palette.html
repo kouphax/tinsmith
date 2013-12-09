@@ -1,0 +1,108 @@
+<!--
+Copyright 2013 The Polymer Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+-->
+<link rel="import" href="../x-meta/x-meta.html">
+
+<polymer-element name="x-palette" on-mousedown="{{mousedown}}" attributes="canvas drag">
+  <template>
+    <style>
+      #title {
+        height: 54px;
+        line-height: 54px;
+        font-size: 21px;
+        padding-left: 22px;
+        background-color: #E0E0E0;
+        border-bottom: 1px solid #E1E1E1;
+      }
+      #list {
+        background-color: #F2F2F2;
+        position: absolute;
+        top: 0;
+        right: 0px;
+        bottom: 0px;
+        left: 0px;
+        padding: 8px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+      }
+      .item {
+        font-size: 15px;
+        font-weight: bold;
+        cursor: pointer;
+        padding: 12px;
+        margin: 10px 6px 10px 10px;
+        background-color: white;
+        border: 1px solid #D3D2D2;
+        border-radius: 5px;
+      }
+      [ishidden] {
+        display: none;
+      }
+    </style>
+    <x-meta id="meta" categories="{{categories}}"></x-meta>
+    <div id="list" on-trackstart="{{trackStart}}" on-track="{{track}}" on-trackend="{{trackEnd}}">
+      <template repeat="{{categories}}">
+        <h3>{{name}}</h3>
+        <template repeat="{{list}}">
+          <div class="item" tag="{{id}}" ishidden?="{{isHidden}}">{{label}}</div>
+        </template>
+      </template>
+   </div>
+  </template>
+  <script>
+    Polymer('x-palette', {
+      // TODO(sjmiles): needed only for Firefox?
+      mousedown: function(event) {
+        event.preventDefault();
+      },
+      trackStart: function(event) {
+        event.stopPropagation();
+        var tag = event.target.getAttribute('tag');
+        if (tag) {
+          this.drag = this.createDragObject(tag, event);
+          this.fire('palette-drag', this.drag);
+        }
+      },
+      track: function(event) {
+        event.stopPropagation();
+        if (this.drag && this.drag.drag) {
+          this.drag.drag(event);
+        }
+      },
+      trackEnd: function(event) {
+        event.stopPropagation();
+        if (this.drag) {
+          if (!this.drag.dropped) {
+            this.drop(this.drag);
+          }
+          this.drag = null;
+        }
+      },
+      drop: function(drag) {
+        // dropping here sends it to the bitbucket
+        // remove the element
+        drag.element.parentNode.removeChild(drag.element);
+      },
+      createDragObject: function(tag, event) {
+        var meta = this.$.meta.byId(tag);
+        //
+        var elt = meta.createElement();
+        var style = elt.style;
+        style.position = 'absolute';
+        style.pointerEvents = 'none';
+        style.transition = 'none';
+        style.webkitTransition = 'none';
+        //
+        return {
+          origin: {left: event.pageX - 24, top: event.pageY - 24},
+          element: elt
+        };
+      }
+    });
+  </script>
+</polymer-element>

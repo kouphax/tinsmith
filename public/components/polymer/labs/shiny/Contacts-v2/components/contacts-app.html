@@ -1,0 +1,414 @@
+<link href="../../../../polymer-elements/polymer-animation/polymer-animation.html" rel="import">
+<link href="../../../../polymer-elements/polymer-animation/polymer-animation-group.html" rel="import">
+<link href="../../../../polymer-elements/polymer-animation/polymer-fadein.html" rel="import">
+<link href="../../../../polymer-elements/polymer-animation/polymer-fadeout.html" rel="import">
+<link href="../../../../polymer-elements/polymer-animation/polymer-translate.html" rel="import">
+<link href="../../../../polymer-elements/polymer-flex-layout/polymer-flex-layout.html" rel="import">
+<link href="../../../../polymer-elements/polymer-grid-layout/polymer-grid-layout.html" rel="import">
+<link href="../../../../polymer-elements/polymer-media-query/polymer-media-query.html" rel="import">
+<link href="../../../../polymer-elements/polymer-scrub/polymer-scrub.html" rel="import">
+<link href="../../../../polymer-ui-elements/polymer-ui-icon-button/polymer-ui-icon-button.html" rel="import">
+<link href="../../../../polymer-ui-elements/polymer-ui-menu/polymer-ui-menu.html" rel="import">
+<link href="../../../../polymer-ui-elements/polymer-ui-menu-item/polymer-ui-menu-item.html" rel="import">
+<link href="../../../../polymer-ui-elements/polymer-ui-overlay/polymer-ui-overlay.html" rel="import">
+<link href="../../../../polymer-ui-elements/polymer-ui-toolbar/polymer-ui-toolbar.html" rel="import">
+<link href="../../../list/elements/polymer-sectioned-list/polymer-sectioned-list.html" rel="import">
+<link href="contacts-create.html" rel="import">
+<link href="contacts-detail.html" rel="import">
+<link href="contacts-icon.html" rel="import">
+<link href="mock-data.html" rel="import">
+<polymer-element name="contacts-app" attributes="page desktopLayout tabletLayout">
+	<template>
+		<style>
+			polymer-ui-menu {
+				padding: 0 !important;
+			}
+			.sidebar {
+				position: absolute;
+				top: 0;
+				left: 0;
+				bottom: 0;
+				background-color: white;
+				font-family: 'Helvetica Neue Medium', HelveticaNeue-Medium, Helvetica, sans-serif;
+				width: 80%;
+				max-width: 300px;
+				box-shadow: 5px 0px 5px rgba(50, 50, 50, 0.6);
+			}
+			.sidebar .header {
+				box-sizing: border-box;
+				height: 240px;
+				background: url('http://lorempixel.com/500/240/nature') repeat-x;
+				padding: 20px 20px 10px;
+				color: white;
+			}
+			.sidebar::x-overlay {
+				height: 100%;
+			}
+			.sidebar polymer-ui-menu-item {
+				margin: 10px;
+				color: black;
+			}
+			/* @polyfill @host */
+			:host {
+				position: absolute;
+				top: 0;
+				left: 0;
+				bottom: 0;
+				right: 0;
+				background: #f0f0f0;
+			}
+			polymer-ui-toolbar {
+				padding-left: 8px;
+				padding-right: 8px;
+			}
+			#listContainer {
+				background: #eeeeee;
+				overflow: hidden;
+				position: relative;
+			}
+      [desktopLayout]#listContainer {
+        min-width: 320px;
+        max-width: 384px;
+      }
+			polymer-sectioned-list {
+				height: 100%;
+			}
+      [tabletLayout] polymer-sectioned-list {
+        margin: 24px;
+      }
+			.contactItem {
+				position: relative;
+			}
+      polymer-sectioned-list ^ #sticky,
+			.contactItem {
+				font-size: 14px;
+				font-family: 'Helvetica Neue', HelveticaNeue, Helvetica, sans-serif;
+				user-select: none;
+			}
+      [tabletLayout] polymer-sectioned-list ^ #sticky {
+        display: none;
+      }
+      polymer-sectioned-list ^ #sticky,
+			.contactItem.header {
+		    background: white;
+				border-style: solid;
+				border-color: rgba(0, 0, 0, 0.15);
+				border-width: 0 1px 1px;
+				box-sizing: border-box;
+		    color: #999;
+				padding: 16px 24px;
+				font-family: 'Helvetica Neue Medium', HelveticaNeue-Medium, Helvetica, sans-serif;
+			}
+			/* @polyfill [tabletLayout] .contactItem.header:first-child */
+      [tabletLayout] .contactItem.header:nth-child(3) {
+        border-top-width: 1px;
+      }
+      .contactItem .firstName {
+        font-weight: bold;
+      }
+		  .contactItemControls {
+		  	position: absolute;
+		  	top: 0;
+		  	left: -100%;
+				box-sizing: border-box;
+		  	width: 100%;
+		  	height: 100%;
+				border-style: solid;
+				border-color: rgba(0, 0, 0, 0.15);
+				border-width: 0 0 1px;
+		  	text-align: right;
+		  	padding: 17px 24px;
+		  }
+		  .contactItemControls.active {
+		  	background: #f5565a;
+		  	opacity: 0;
+		  }
+			.contactItemInk {
+				position: absolute;
+				top: 0;
+				left: 0;
+				bottom: 0;
+				right: 0;
+				background: #f2f2f2;
+				visibility: hidden;
+			}
+			[desktopLayout] .contactItem[selected] .contactItemInk {
+				visibility: visible;
+			}
+		  .contactItemBody {
+				position: relative;
+				background: white;
+				border-style: solid;
+				border-color: rgba(0, 0, 0, 0.15);
+				border-width: 0 1px 1px;
+				box-sizing: border-box;
+				padding: 16px;
+		  }
+			.contactItemBody > :not(.contactItemInk) {
+				z-index: 1;
+			}
+		  [desktopLayout] #details {
+		  	min-width: 50%;
+		  	height: 100%;
+		  }
+			#details.polymer-overlay {
+				position: fixed;
+				top: 0;
+				left: 0;
+				bottom: 0;
+				right: 0;
+				-webkit-transform-origin-y: top;
+				opacity: 0;
+			}
+			#details.polymer-overlay.opened {
+				opacity: 1;
+			}
+			#createOverlay {
+				position: fixed;
+				top: 0;
+				left: 0;
+				bottom: 0;
+				right: 0;
+			}
+			/*:host([desktopLayout]) ^ #createOverlay {*/
+			#createOverlay[desktopLayout] {
+				right: 16px;
+				left: 336px;
+			}
+			#createOverlay ^ #container {
+				height: 100%;
+			}
+			#createOverlay[desktopLayout] ^ #container {
+				border-radius: 3px;
+			}
+		  .addButton {
+		  	position: absolute;
+        left: auto;
+		  	bottom: 16px;
+		  	right: 16px;
+		  	color: white;
+		  	padding: 8px 14px;
+		  	background: #bdc146;
+		  	font-size: 20px;
+		  	border: 1px solid #d9d9d9;
+		  	border-radius: 20px;
+		  	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+		  }
+		</style>
+		<mock-data id="mock"></mock-data>
+		<polymer-media-query query="min-width: 768px" queryMatches="{{desktopLayout}}"></polymer-media-query>
+    <polymer-media-query query="(min-width: 480px) and (max-width: 768px)" queryMatches="{{tabletLayout}}"></polymer-media-query>
+		<polymer-grid-layout id="grid" nodes="{{layoutNodes}}" on-polymer-grid-layout="{{layoutAction}}"></polymer-grid-layout>
+		<polymer-ui-overlay id="sidebar" class="sidebar" backdrop modal>
+			<polymer-ui-menu valueattr="label" on-polymer-select="{{sidebarCloseAction}}">
+				<div class="header">
+					<polymer-flex-layout vertical></polymer-flex-layout>
+					<contacts-icon contact="{{me}}" large></contacts-icon>
+					<div flex></div>
+					<p>ykyyip@google.com</p>
+				</div>
+				<polymer-ui-menu-item label="Contacts" icon="contact"></polymer-ui-menu-item>
+				<polymer-ui-menu-item label="Groups" icon="stream"></polymer-ui-menu-item>
+				<polymer-ui-menu-item label="Favorites" icon="favorite"></polymer-ui-menu-item>
+				<polymer-ui-menu-item label="Settings" icon="settings"></polymer-ui-menu-item>
+				<polymer-ui-menu-item label="Import &amp; Export" icon="shortcut"></polymer-ui-menu-item>
+				<polymer-ui-menu-item label="Help" icon="dialog"></polymer-ui-menu-item>
+			</polymer-ui-menu>
+		</polymer-ui-overlay>
+		<polymer-ui-toolbar id="toolbar">
+			<polymer-ui-icon-button icon="menu" on-tap="{{menuAction}}"></polymer-ui-icon-button>
+			<div flex>All Contacts</div>
+			<polymer-ui-icon-button icon="search"></polymer-ui-icon-button>
+			<template if="{{desktopLayout}}">
+				<polymer-ui-icon-button icon="shortcut"></polymer-ui-icon-button>
+				<polymer-ui-icon-button icon="favorite"></polymer-ui-icon-button>
+			</template>
+		</polymer-ui-toolbar>
+		<div id="listContainer" desktopLayout?="{{desktopLayout}}" tabletLayout?="{{tabletLayout}}">
+			<polymer-sectioned-list id="list" data="{{$.mock.withHeaders}}" listData="{{listData}}">
+				<template repeat="{{contact in listData}}">
+					<!-- <contacts-list-item contact="{{contact}}"></contacts-list-item> -->
+
+					<template if="{{contact.header}}">
+						<div class="contactItem header {{contact.page}}">
+							{{contact.header}}
+						</div>
+					</template>
+					<template if="{{!contact.header}}">
+						<div class="contactItem {{contact.page}}" selected?="{{contact.selected}}" on-pointerdown="{{pointerdownAction}}">
+							<div class="contactItemControls active"></div>
+							<div class="contactItemControls">
+								<polymer-ui-icon-button icon="close"></polymer-ui-icon-button>
+							</div>
+							<div class="contactItemBody" on-click="{{activateAction}}">
+								<div class="contactItemInk"></div>
+								<polymer-flex-layout align="center"></polymer-flex-layout>
+									<contacts-icon contact="{{contact}}"></contacts-icon>
+								<div><span class="firstName">{{contact.firstName}}</span> {{contact.surname}}</div>
+							</div>
+						</div>
+					</template>
+					
+				</template>
+			</polymer-sectioned-list>
+		</div>
+		<contacts-detail id="details" contact="{{selectedContact.contact}}" desktopLayout?="{{desktopLayout}}" on-contacts-detail-cancel="{{closeDetailsAction}}"></contacts-detail>
+		<polymer-ui-overlay id="createOverlay" xdesktopLayout?="{{desktopLayout}}" autocloseDisabled backdrop on-polymer-overlay-open="{{openCreateAction}}">
+			<contacts-create id="create" on-contacts-create-cancel="{{closeCreateAction}}" on-contacts-create="{{closeCreateAction}}"></contacts-create>
+		</polymer-ui-overlay>
+    <div class="addButton" on-tap="{{addAction}}">&#x2b;</div>
+    <!-- overlay -->
+		<polymer-overlay id="detailsOverlay" transitions="{{activateTransitions}}" autocloseDisabled></polymer-overlay>
+		<!-- <polymer-overlay id="createOverlay" target="{{$.create}}" autocloseDisabled></polymer-overlay> -->
+		<!-- scrubbing -->
+		<polymer-scrub id="scrub" animation="{{$.slideAnimation.animation}}" snapThreshold="0.2" on-polymer-scrub-animation-end="{{scrubAnimationEndAction}}"></polymer-scrub>
+		<polymer-animation-group id="slideAnimation" type="par" fillMode="forwards">
+			<polymer-translate id="translateAnimation" fromX="0" toX="100%" duration="0.6" fillMode="forwards"></polymer-translate>
+			<polymer-fadein id="fadeAnimation" duration="0.1" fillMode="forwards"></polymer-fadein>
+		</polymer-animation-group>
+		<!-- item delete animation -->
+		<polymer-translate id="deleteAnimation" duration="0.1" fromY="0" toY="-100%" fillMode="forwards" easing="ease-in" on-polymer-animation-end="{{deleteAnimationEndAction}}"></polymer-translate>
+		<!-- transition -->
+		<polymer-animation id="inkAnimation" duration="0.3" easing="ease-in" on-polymer-animation-end="{{inkAnimationEndAction}}"></polymer-animation>
+		<polymer-animation-group id="activateAnimation" type="par" duration="0.2">
+			<polymer-translate target="{{$.toolbar}}" fromY="0" toY="-100%"></polymer-translate>
+			<polymer-fadeout target="{{$.toolbar}}"></polymer-fadeout>
+			<polymer-fadeout target="{{$.sticky}}"></polymer-fadeout>
+			<polymer-fadeout target="{{$.list}}"></polymer-fadeout>
+			<polymer-animation target="{{$.details}}" easing="ease-in">
+				<polymer-animation-keyframe>
+					<polymer-animation-prop name="transform" value="scaleY(1.5)"></polymer-animation-prop>
+					<polymer-animation-prop name="opacity" value="0"></polymer-animation-prop>
+				</polymer-animation-keyframe>
+				<polymer-animation-keyframe>
+					<polymer-animation-prop name="transform" value="scaleY(1)"></polymer-animation-prop>
+					<polymer-animation-prop name="opacity" value="1"></polymer-animation-prop>
+				</polymer-animation-keyframe>
+			</polymer-animation>
+		</polymer-animation-group>
+	</template>
+	<script>
+		Polymer('contacts-app', {
+			desktopLayout: false,
+      tabletLayout: false,
+			selectedContact: null,
+      observe: {
+        desktopLayout: 'layoutChanged',
+        tabletLayout: 'layoutChanged'
+      },
+			ready: function() {
+				this.activateTransitions = [this.$.activateAnimation, null];
+        this.selectedContact = {contact: this.$.mock.contacts[0]};
+        this.layoutChanged();
+			},
+			enableOverlays: function() {
+				this.$.details.removeAttribute('style');
+				this.$.detailsOverlay.target = this.$.details;
+			},
+			disableOverlays: function() {
+				this.$.detailsOverlay.opened && (this.$.detailsOverlay.opened = false);
+				this.$.detailsOverlay.target = null;
+			},
+			layoutChanged: function() {
+				if (this.desktopLayout) {
+					this.disableOverlays();
+          this.$.listContainer.style.width = null;
+	        this.layoutNodes = [this.$.toolbar, this.$.listContainer, this.$.details];
+					this.$.grid.layout = [
+						[1, 1],
+						[2, 3],
+						[2, 3],
+					];
+				} else {
+					this.enableOverlays();
+	        this.layoutNodes = [this.$.toolbar, this.$.listContainer];
+					this.$.grid.layout = [
+						[1, 1],
+						[2, 2],
+						[2, 2],
+					];
+				}
+			},
+			layoutAction: function() {
+				this.$.list.refresh();
+			},
+			pointerdownAction: function(e, detail, sender) {
+				this.$.scrub.target = sender;
+				this.$.translateAnimation.target = sender;
+				this.$.fadeAnimation.target = sender.querySelector('.contactItemControls.active');
+				this.$.slideAnimation.apply();
+			},
+			scrubAnimationEndAction: function(e, detail, sender) {
+				this.deletedContact = sender.target.templateInstance.model.contact.__proto__;
+        var listRect = this.$.list.getBoundingClientRect();
+        var itemRect = sender.target.getBoundingClientRect();
+        var height = listRect.bottom - itemRect.top;
+        var item = sender.target;
+        var targets = [];
+        do {
+          item = item.nextElementSibling;
+          if (item.classList.contains('contactItem')) {
+            targets.push(item);
+            height -= itemRect.height;
+          }
+        } while (height > 0);
+        this.$.deleteAnimation.target = targets;
+        this.$.deleteAnimation.play();
+			},
+			deleteAnimationEndAction: function(e, detail, sender) {
+				var index = this.$.mock.withHeaders.indexOf(this.deletedContact);
+				this.$.mock.withHeaders.splice(index, 1);
+			},
+			addAction: function() {
+				this.$.createOverlay.active = true;
+			},
+			menuAction: function() {
+				this.fire('contacts-menu-open');
+			},
+			closeDetailsAction: function() {
+				this.$.detailsOverlay.opened = false;
+			},
+			closeCreateAction: function() {
+				this.$.createOverlay.active = false;
+			},
+			setupInkAnimationAction: function(e, detail, sender) {
+				var rect = sender.getBoundingClientRect();
+				var target = sender.querySelector('.contactItemInk');
+				this.$.inkAnimation.sample = function(t) {
+					target.style.webkitClipPath = 'circle(' + (e.x - rect.left) + 'px,' + (e.y - rect.top) + 'px,' + t * rect.width + 'px)';
+				};
+				this.$.inkAnimation.target = target;
+			},
+			inkAnimationEndAction: function() {
+				this.$.inkAnimation.sample(1);
+			},
+			activateAction: function(e, detail, sender) {
+				if (!this.$.scrub.scrubbing) {
+					if (this.selectedContact) {
+						this.selectedContact.contact.selected = false;
+					}
+					this.selectedContact = sender.templateInstance.model;
+					this.selectedContact.contact.selected = true;
+					if (!this.desktopLayout) {
+						this.$.detailsOverlay.opened = true;
+					}
+				}
+				if (this.desktopLayout) {
+					var rect = sender.getBoundingClientRect();
+					var target = sender.querySelector('.contactItemInk');
+					this.$.inkAnimation.sample = function(t) {
+						target.style.webkitClipPath = 'circle(' + (e.x - rect.left) + 'px,' + (e.y - rect.top) + 'px,' + t * rect.width + 'px)';
+					};
+					this.$.inkAnimation.target = target;
+					this.$.inkAnimation.play();
+				}
+			},
+			sidebarOpenAction: function() {
+				this.$.sidebar.active = true;
+			},
+			sidebarCloseAction: function() {
+				this.$.sidebar.active = false;
+			}
+		});
+	</script>
+</polymer-element>

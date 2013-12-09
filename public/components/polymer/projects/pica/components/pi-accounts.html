@@ -1,0 +1,142 @@
+<!--
+/*
+ * Copyright 2013 The Polymer Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+-->
+<link rel="import" href="../../../polymer-ui-elements/polymer-ui-icon-button/polymer-ui-icon-button.html"/>
+<link rel="import" href="../../../polymer-ui-elements/polymer-ui-menu-button/polymer-ui-menu-button.html"/>
+<link rel="import" href="../../../polymer-ui-elements/polymer-ui-menu-item/polymer-ui-menu-item.html"/>
+<link rel="import" href="pi-gfeeds.html"/>
+<polymer-element name="pi-accounts" attributes="accounts">
+  <template>
+    <link rel="stylesheet" href="css/pi-accounts.css" />
+    <div class="item">
+      <div class="flex"></div>
+      <button class="button" on-tap="{{reset}}">Restore Defaults</button>
+    </div>
+    <div class="header item">Finance</div>
+    <div>
+      <template repeat="{{accounts.stocks}}">
+        <div class="item">
+          <div class="flex">{{}}</div>
+          <polymer-ui-icon-button icon="close" on-tap="{{removeStock}}"></polymer-ui-icon-button>
+        </div>
+      </template>
+    </div>
+    <div class="item">
+      <div class="item-input-label">Symbol: </div>
+      <input id="symbol" autocorrect="off" operation="addStock" on-keyup="{{keyupHandler}}" />
+      <polymer-ui-icon-button icon="plus" on-tap="{{addStock}}"></polymer-ui-icon-button>
+    </div>
+    <div class="header item">Topics</div>
+    <div class="item accounts-title">Add New Feed</div>
+    <div class="item no-border">
+      <div class="item-input-label">Url: </div>
+      <input id="feed" type="url" class="flex" operation="addFeed" on-keyup="{{keyupHandler}}" />
+      <polymer-ui-icon-button icon="plus" on-tap="{{addFeed}}"></polymer-ui-icon-button>
+    </div>
+    <div class="item">
+      <div class="item-input-label">Category: </div>
+      <span class="category-select-value">{{selectedCategory}}</span>
+      <polymer-ui-menu-button id="categorySelect" selected="{{selectedCategory}}" icon="dropdown">
+        <template repeat="{{accounts.categories}}">
+          <polymer-ui-menu-item name="{{}}">{{}}</polmer-ui-menu-item>
+        </template>
+      </polymer-ui-menu-button>
+    </div>
+    <div class="item accounts-title">Add New Category</div>
+    <div class="item">
+      <div class="item-input-label">Name: </div>
+      <input id="category" class="flex" operation='addCategory' on-keyup="{{keyupHandler}}" />
+      <polymer-ui-icon-button icon="plus" on-tap="{{addCategory}}"></polymer-ui-icon-button>
+    </div>
+    <div>
+      <template repeat="{{accounts.topics}}">
+        <div class="item accounts-title">
+          <polymer-ui-icon class="accounts-title-icon" icon="favorite"></polymer-ui-icon>
+          <div class="flex">{{title}}</div>
+          <polymer-ui-icon-button icon="close" on-tap="{{removeTopic}}"></polymer-ui-icon-button>
+        </div>
+        <template repeat="{{feed}}">
+          <div class="item">
+            <div class="flex accounts-feed-title">{{title}}</div>
+            <polymer-ui-icon-button icon="close" on-tap="{{removeFeed}}"></polymer-ui-icon-button>
+          </div>
+        </template>
+      </template>
+    </div>
+    <pi-gfeeds feed="{{feedUrl}}" count="0" on-response="{{feedResponse}}" on-error="{{feedResponse}}"></pi-gfeeds>
+  </template>
+  <script>
+    (function() {
+      var ENTER_KEY = 13;
+      
+      Polymer('pi-accounts', {
+        ready: function() {
+          this.setAttribute('touch-action', 'scroll');
+          this.asyncFire('ready');
+        },
+        accountsChanged: function() {
+          this.selectedCategory = this.accounts.categories[0];
+        },
+        addStock: function() {
+          var s = this.$.symbol.value;
+          if (s) {
+            this.accounts.addStock(s);
+            this.$.symbol.value = '';
+          }
+        },
+        removeStock: function(event, detail, sender) {
+          this.accounts.removeStock(sender.templateInstance.model);
+        },
+        addFeed: function() {
+          var f = this.$.feed.value;
+          if (f) {
+            // verify feed and retrieve feed title
+            this.feedUrl = f;
+          }
+        },
+        feedResponse: function(event, detail) {
+          var f = detail.feed;
+          if (f) {
+            this.accounts.addFeed({title: f.title, feed: f.feedUrl,
+              category: this.selectedCategory});
+            this.$.feed.value = '';
+            this.feedUrl = null;
+          } else {
+            console.error('Error trying to add feed', detail);
+          }
+        },
+        removeFeed: function(event, detail, sender) {
+          this.accounts.removeFeed(sender.templateInstance.model);
+        },
+        removeTopic: function(event, detail, sender) {
+          var m = sender.templateInstance.model;
+          this.accounts.removeTopic(m);
+          this.removeCategory(m.title);
+        },
+        addCategory: function() {
+          var n = this.$.category.value;
+          if (n) {
+            this.accounts.addCategory(n);
+            this.$.category.value = '';
+          }
+        },
+        removeCategory: function(category) {
+          this.accounts.removeCategory(category);
+        },
+        reset: function() {
+          this.accounts.reset();
+        },
+        keyupHandler: function(e, detail, sender) {
+          var op = sender.getAttribute('operation');
+          if (e.keyCode === ENTER_KEY && op) {
+            this[op]();
+          }
+        }
+      });
+    })();
+  </script>
+</polymer-element>
